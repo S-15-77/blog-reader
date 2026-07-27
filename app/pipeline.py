@@ -1,0 +1,90 @@
+import subprocess
+from pathlib import Path
+
+import ollama
+from firecrawl import Firecrawl
+from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
+
+from app.config import settings
+from app.database import SessionLocal
+from app.models import Job, JobStatus
+from app.websockets import build_job_message, manager
+
+PODCAST_PROMPT_TEMPLATE = (
+    "You are writing a short podcast narration script based on the blog post "
+    "content below. Summarize it into a natural, spoken-style script a narrator "
+    "could read aloud in 2-3 minutes. Do not include any headers, bullet points, "
+    "or markdown formatting - just the spoken script text.\n\n"
+    "Blog content:\n{content}"
+)
+
+
+def scrape_blog(url: str) -> str:
+    client = Firecrawl(api_key=settings.firecrawl_api_key)
+    document = client.scrape(url, formats=["markdown"])
+    return document.markdown
+
+
+def summarize_content(content: str) -> str:
+    client = ollama.Client(host=settings.ollama_host)
+    response = client.chat(
+        model=settings.ollama_model,
+        messages=[
+            {
+                "role": "user",
+                "content": PODCAST_PROMPT_TEMPLATE.format(content=content),
+            }
+        ],
+    )
+    return response["message"]["content"]
+
+
+# ponytail: macOS `say` command only - free, offline, no API key, but
+# Mac-specific. Swap for a cross-platform TTS (e.g. Coqui, edge-tts) if this
+# ever needs to run on Linux/Windows.
+def generate_audio(text: str, voice_id: str, job_id: str) -> str:
+    filename = f"{job_id}.wav"
+    filepath = Path(settings.audio_dir) / filename
+    subprocess.run(
+        ["say", "-v", voice_id, "-o", str(filepath), "--data-format=LEI16@22050", text],
+        check=True,
+    )
+    return filename
+
+
+async def update_job_status(db: Session, job: Job, status: JobStatus, **fields) -> None:
+    job.status = status
+    for key, value in fields.items():
+        setattr(job, key, value)
+    db.commit()
+    db.refresh(job)
+    await manager.broadcast(job.id, build_job_message(job))
+
+
+async def run_pipeline(job_id: str) -> None:
+    db = SessionLocal()
+    try:
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if job is None:
+            return
+
+        try:
+            await update_job_status(db, job, JobStatus.scraping)
+            content = await run_in_threadpool(scrape_blog, job.url)
+
+            await update_job_status(db, job, JobStatus.summarizing)
+            summary = await run_in_threadpool(summarize_content, content)
+
+            await update_job_status(
+                db, job, JobStatus.generating_audio, summary_text=summary
+            )
+            filename = await run_in_threadpool(
+                generate_audio, summary, job.voice_id, job.id
+            )
+
+            await update_job_status(db, job, JobStatus.done, audio_filename=filename)
+        except Exception as exc:
+            await update_job_status(db, job, JobStatus.failed, error_message=str(exc))
+    finally:
+        db.close()

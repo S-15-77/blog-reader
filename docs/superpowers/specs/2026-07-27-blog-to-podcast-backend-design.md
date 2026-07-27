@@ -1,7 +1,15 @@
 # Blog-to-Podcast Backend — Design Spec
 
-Status: approved pending user sign-off
+Status: implemented (see Addendum below for a post-implementation change)
 Scope: backend only (`podcast-agent-backend`, this repo). Frontend (`podcast-agent-frontend`) is a separate spec, built after this backend works end-to-end.
+
+## Addendum (2026-07-27): audio engine swapped from ElevenLabs to local macOS `say`
+
+During real end-to-end testing (real Firecrawl scrape, real local Ollama summarization, both verified working), audio generation against real ElevenLabs credentials failed with `402 payment_required: Free users cannot use library voices via the API`. This held even for a voice explicitly added to the account's own library via the ElevenLabs dashboard - ElevenLabs' free tier restricts API access to voices created via that account's own Instant Voice Cloning, not merely "added" voices. The user could not justify paying for a plan upgrade for a learning project.
+
+Rather than block on that, audio generation was switched to macOS's built-in `say` command: free, fully offline, no API key, matching the same "no cost, nothing leaves your machine" ethos already established for using local Ollama instead of a cloud LLM. This is a real, accepted scope narrowing (see `# ponytail:` comment in `app/pipeline.py`): the backend is now macOS-only for audio generation. A cross-platform swap (e.g. Coqui TTS, edge-tts) is the documented upgrade path if this ever needs to run elsewhere.
+
+Concretely: `ElevenLabs` client removed from `app/pipeline.py` and `requirements.txt`; `ELEVEN_LABS_API_KEY` removed from `app/config.py` and `.env(.example)`; `app/voices.py`'s preset list now holds macOS system voice names (`say -v ?`) instead of ElevenLabs voice IDs. The `JobStatus.generating_audio` step name, the `audio_filename`/`audio_url` fields, and the rest of the pipeline's shape are unchanged - only the mechanism behind `generate_audio()` changed.
 
 ## Purpose
 
