@@ -1,7 +1,11 @@
 # Blog-to-Podcast Backend — Design Spec
 
-Status: implemented (see Addendum below for a post-implementation change)
-Scope: backend only (`podcast-agent-backend`, this repo). Frontend (`podcast-agent-frontend`) is a separate spec, built after this backend works end-to-end.
+Status: implemented (see Addenda below for post-implementation changes)
+Scope: backend only (`podcast-agent-backend`, originally its own repo). Frontend (`podcast-agent-frontend`) is a separate spec, built after this backend works end-to-end.
+
+## Addendum (2026-07-27): merged into a single monorepo (`blog-to-podcast/backend/` + `blog-to-podcast/frontend/`)
+
+This spec's "Why two separate repos instead of a monorepo" reasoning (in the pasted original README) was the deliberate initial architecture, and it held for the backend's entire build and the start of the frontend's. After the frontend was scaffolded as its own sibling repo, the user asked to combine both into a single repository instead, for their own convenience. Both codebases were moved as-is into `backend/` and `frontend/` subfolders of one repo; the frontend's separate `.git` (which had no commits yet) was discarded, and `blog-to-podcast`'s existing git history became the one and only repo. No application code changed - only file locations, plus a repo-root `.gitignore` covering both subprojects. Every path in this document that still says `podcast-agent-backend` as a standalone repo root should now be read as `blog-to-podcast/backend/`.
 
 ## Addendum (2026-07-27): audio engine swapped from ElevenLabs to local macOS `say`
 

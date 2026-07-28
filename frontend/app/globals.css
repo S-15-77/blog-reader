@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f2e9;
+  --foreground: #2b2420;
+  --accent: #b5482f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-serif);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1c1815;
+    --foreground: #f2ece2;
+    --accent: #e0855f;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+h1 {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+@keyframes waveform-bounce {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.waveform {
+  display: inline-flex;
+  gap: 2px;
+  width: 16px;
+  height: 12px;
+}
+
+.waveform::before,
+.waveform::after {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  background: var(--accent);
+  animation: waveform-bounce 0.6s ease-in-out infinite;
+}
+
+.waveform::after {
+  animation-delay: 0.2s;
+}
