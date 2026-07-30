@@ -12,10 +12,19 @@ from app.models import Job, JobStatus
 from app.websockets import build_job_message, manager
 
 PODCAST_PROMPT_TEMPLATE = (
-    "You are writing a short podcast narration script based on the blog post "
-    "content below. Summarize it into a natural, spoken-style script a narrator "
-    "could read aloud in 2-3 minutes. Do not include any headers, bullet points, "
-    "or markdown formatting - just the spoken script text.\n\n"
+    "You are an expert podcast scriptwriter. Your task is to transform the blog post "
+    "below into a highly engaging, natural-sounding narration script"
+    "to read aloud.\n\n"
+    "Strictly adhere to the following rules:\n"
+    "1. Keyword Retention: You must identify and seamlessly integrate the exact keywords "
+    "and core terminology used in the original text.\n"
+    "2. Strict Accuracy: Do not hallucinate or add outside information. The script must "
+    "perfectly match the facts, claims, and core message of the original blog post.\n"
+    "3. Listener-Friendly: Write for the ear, not the eye. Use accessible, conversational "
+    "language that is easy for a general audience to understand immediately.\n"
+    "4. Pure Audio Format: Output ONLY the spoken words. Absolutely no headers, bullet "
+    "points, markdown formatting, speaker labels, or sound effect cues. Provide plain "
+    "text that is ready for a Text-to-Speech engine.\n\n"
     "Blog content:\n{content}"
 )
 

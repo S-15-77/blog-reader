@@ -2,13 +2,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "./page";
-import { createJob, getVoices, listJobs } from "@/lib/api";
+import { createJob, getVoices } from "@/lib/api";
 import { useJobSocket } from "@/hooks/useJobSocket";
 
 vi.mock("@/lib/api", () => ({
   getVoices: vi.fn(),
   createJob: vi.fn(),
-  listJobs: vi.fn(),
 }));
 
 vi.mock("@/hooks/useJobSocket", () => ({
@@ -17,13 +16,11 @@ vi.mock("@/hooks/useJobSocket", () => ({
 
 const mockedGetVoices = vi.mocked(getVoices);
 const mockedCreateJob = vi.mocked(createJob);
-const mockedListJobs = vi.mocked(listJobs);
 const mockedUseJobSocket = vi.mocked(useJobSocket);
 
 describe("Home", () => {
   beforeEach(() => {
     mockedGetVoices.mockResolvedValue([{ id: "Samantha", name: "Samantha (US)" }]);
-    mockedListJobs.mockResolvedValue([]);
     mockedUseJobSocket.mockReturnValue({
       status: null,
       summaryText: null,

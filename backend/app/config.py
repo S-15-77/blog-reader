@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     firecrawl_api_key: str = ""
-    ollama_model: str = "llama3.2:latest"
+    ollama_model: str = "qwen2.5:3b-instruct"
     ollama_host: str = "http://localhost:11434"
     database_url: str = "sqlite:///./podcast_agent.db"
     audio_dir: str = "audio_generations"
