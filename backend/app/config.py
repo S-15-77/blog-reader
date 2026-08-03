@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     firecrawl_api_key: str = ""
     ollama_model: str = "qwen2.5:3b-instruct"
     ollama_host: str = "http://localhost:11434"
+    nvidia_api_key: str = ""
+    nvidia_model: str = "meta/llama-3.1-8b-instruct"
+    llm_provider: str = "ollama"  # "ollama" or "nvidia"
     database_url: str = "sqlite:///./podcast_agent.db"
     audio_dir: str = "audio_generations"
     cors_origins: list[str] = ["http://localhost:3000"]

@@ -9,8 +9,10 @@ Narration originally used ElevenLabs, but ElevenLabs' free tier blocks API acces
 Prerequisites:
 - macOS (for the `say` command)
 - Python 3.10+
-- [Ollama](https://ollama.com) installed and running locally
 - A Firecrawl API key
+- An LLM backend for the summarization step — pick one:
+  - [Ollama](https://ollama.com) installed and running locally (default), or
+  - an [NVIDIA build.nvidia.com](https://build.nvidia.com) API key (free trial credits, OpenAI-compatible, no local install)
 
 ```bash
 python3 -m venv .venv
@@ -24,6 +26,8 @@ cp .env.example .env
 
 uvicorn app.main:app --reload --port 8000
 ```
+
+To use NVIDIA instead of Ollama: sign in at build.nvidia.com, open a model page (e.g. `meta/llama-3.1-8b-instruct`) and click "Get API Key", then in `.env` set `LLM_PROVIDER=nvidia` and `NVIDIA_API_KEY=<your key>` (Ollama doesn't need to be running in this mode).
 
 Visit http://localhost:8000/docs for interactive Swagger docs.
 

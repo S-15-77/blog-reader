@@ -3,6 +3,7 @@ from pathlib import Path
 
 import ollama
 from firecrawl import Firecrawl
+from openai import OpenAI
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
@@ -28,6 +29,8 @@ PODCAST_PROMPT_TEMPLATE = (
     "Blog content:\n{content}"
 )
 
+NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+
 
 def scrape_blog(url: str) -> str:
     client = Firecrawl(api_key=settings.firecrawl_api_key)
@@ -47,6 +50,20 @@ def summarize_content(content: str) -> str:
         ],
     )
     return response["message"]["content"]
+
+
+def summarize_content_nvidia(content: str) -> str:
+    client = OpenAI(base_url=NVIDIA_BASE_URL, api_key=settings.nvidia_api_key)
+    response = client.chat.completions.create(
+        model=settings.nvidia_model,
+        messages=[
+            {
+                "role": "user",
+                "content": PODCAST_PROMPT_TEMPLATE.format(content=content),
+            }
+        ],
+    )
+    return response.choices[0].message.content
 
 
 # ponytail: macOS `say` command only - free, offline, no API key, but
@@ -83,7 +100,10 @@ async def run_pipeline(job_id: str) -> None:
             content = await run_in_threadpool(scrape_blog, job.url)
 
             await update_job_status(db, job, JobStatus.summarizing)
-            summary = await run_in_threadpool(summarize_content, content)
+            if settings.llm_provider == "nvidia":
+                summary = await run_in_threadpool(summarize_content_nvidia, content)
+            else:
+                summary = await run_in_threadpool(summarize_content, content)
 
             await update_job_status(
                 db, job, JobStatus.generating_audio, summary_text=summary
